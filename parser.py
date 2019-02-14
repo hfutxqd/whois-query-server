@@ -1559,6 +1559,7 @@ class WhoisCn(WhoisEntry):
     regex = {
         'domain_name':          'Domain Name: *(.+)',
         'registrar':            'Registrar: *(.+)',
+        'name':                 'Registrant: *(.+)',
         'creation_date':        'Registration Time: *(.+)',
         'expiration_date':      'Expiration Time: *(.+)',
         'name_servers':         'Name Server: *(.+)',  # list of name servers
