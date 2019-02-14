@@ -11,13 +11,13 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_HEAD(self):
         self.send_response(200)
-        self.send_header('Content-type', 'text/plain')
+        self.send_header('Content-type', 'text/plain; charset=UTF-8')
         self.end_headers()
 
     def do_GET(self):
         print(self.path)
         self.send_response(200)
-        self.send_header('Content-type', 'text/plain')
+        self.send_header('Content-type', 'text/plain; charset=UTF-8')
         self.end_headers()
         self.wfile.write(bytes(query.query(self.path[1:]), 'utf-8'))
 
