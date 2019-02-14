@@ -5,6 +5,8 @@
 import socket
 import json
 import re
+from parser import WhoisEntry
+from bson import json_util
 
 f = open('servers.json')
 servers = json.loads(f.read())
@@ -34,8 +36,9 @@ def query(domain):
     if top in servers:
         query_server = servers[top]
     else:
-        query_server = query_whois_server(top)
-        servers[top] = query_server
+        query_server = query_whois_server(domain)
+        if query_server:
+            servers[top] = query_server
 
     if query_server is None:
         print('*.{} is not supported!'.format(top))
@@ -52,8 +55,9 @@ def query(domain):
 
     response = str(data, 'utf8')
     print(response)
-    return response
+    res = json.dumps(WhoisEntry.load(domain, response), ensure_ascii=False, default=json_util.default)
+    return res
 
 
-# domain = '导航.中国'
+# domain = 'baidu.com'
 # query(domain)
