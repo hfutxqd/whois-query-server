@@ -3,6 +3,7 @@
 import http.server
 import socketserver
 import query
+import json
 
 PORT = 8000
 
@@ -11,15 +12,21 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_HEAD(self):
         self.send_response(200)
-        self.send_header('Content-type', 'text/plain; charset=UTF-8')
+        self.send_header('Content-type', 'application/json; charset=UTF-8')
         self.end_headers()
 
     def do_GET(self):
-        print(self.path)
         self.send_response(200)
-        self.send_header('Content-type', 'text/plain; charset=UTF-8')
+        self.send_header('Content-type', 'application/json; charset=UTF-8')
         self.end_headers()
-        self.wfile.write(bytes(query.query(self.path[1:]), 'utf-8'))
+        if self.path.startswith('/raw/'):
+            self.wfile.write(bytes(query.query(self.path[5:], raw=True), 'utf-8'))
+        elif self.path.startswith('/json/'):
+            self.wfile.write(bytes(query.query(self.path[6:], raw=False), 'utf-8'))
+        else:
+            self.wfile.write(bytes(json.dumps({
+                "result": "error"
+            }), 'utf-8'))
 
 
 Handler = MyHTTPRequestHandler

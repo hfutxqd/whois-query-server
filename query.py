@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 
 # -*- coding: utf-8 -*-
-
+import datetime
 import socket
 import json
 import re
 from parser import WhoisEntry
-from bson import json_util
 
 f = open('servers.json')
 servers = json.loads(f.read())
 f.close()
+
+
+def decode_datetime(obj):
+    if isinstance(obj, datetime.datetime):
+        return str(int(obj.timestamp()))
 
 
 def query_whois_server(top):
@@ -30,7 +34,7 @@ def query_whois_server(top):
     pass
 
 
-def query(domain):
+def query(domain, raw=False):
     top = domain[domain.rfind('.') + 1:]
 
     if top in servers:
@@ -55,7 +59,9 @@ def query(domain):
 
     response = str(data, 'utf8')
     print(response)
-    res = json.dumps(WhoisEntry.load(domain, response), ensure_ascii=False, default=json_util.default)
+    if raw:
+        return response
+    res = json.dumps(WhoisEntry.load(domain, response), ensure_ascii=False, default=decode_datetime)
     return res
 
 
