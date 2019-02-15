@@ -234,7 +234,7 @@ class WhoisEntry(dict):
             return WhoisBe(domain, text)
         elif domain.endswith('.褉褎'):
             return WhoisRf(domain, text)
-        elif domain.endswith('.info'):
+        elif domain.endswith('.info') or domain.endswith('.集团'):
             return WhoisInfo(domain, text)
         elif domain.endswith('.su'):
             return WhoisSu(domain, text)
@@ -284,7 +284,7 @@ class WhoisEntry(dict):
             return WhoisCz(domain, text)
         elif domain.endswith('.online'):
             return WhoisOnline(domain, text)
-        elif domain.endswith('.cn'):
+        elif domain.endswith('.cn') or domain.endswith('.中国') or domain.endswith('.公司') or domain.endswith('.中文网'):
             return WhoisCn(domain, text)
         elif domain.endswith('.app'):
             return WhoisApp(domain, text)

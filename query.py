@@ -40,8 +40,9 @@ def get_top_domain(domain):
                     break
                 pass
             if can_query:
+                top = '.'.join(parts[-1:])
                 domain = '.'.join(parts[i:])
-                return parts[-1:], domain
+                return top, domain
         pass
     return top, domain
 
@@ -70,6 +71,7 @@ def query_whois_server(top):
 
 def query(domain, raw=False):
     top, domain = get_top_domain(domain)
+    print(top)
     if top in servers:
         query_server = servers[top]
     else:
