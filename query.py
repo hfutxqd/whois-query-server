@@ -23,6 +23,29 @@ def parse_raw(domain, data):
     return json.dumps(WhoisEntry.load(domain, data), ensure_ascii=False, default=decode_datetime)
 
 
+def get_top_domain(domain):
+    parts = domain.split('.')
+    top = 'com'
+    for i in range(len(parts) - 1):
+        top = '.'.join(parts[i + 1:])
+        if top in servers:
+            domain = '.'.join(parts[i:])
+            break
+        else:
+            # 查询后缀是否都在顶级域名中
+            can_query = True
+            for item in parts[i + 1:]:
+                if item not in servers:
+                    can_query = False
+                    break
+                pass
+            if can_query:
+                domain = '.'.join(parts[i:])
+                return parts[-1:], domain
+        pass
+    return top, domain
+
+
 def query_whois_server(top):
     server = "whois.iana.org"
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -46,8 +69,7 @@ def query_whois_server(top):
 
 
 def query(domain, raw=False):
-    top = domain[domain.rfind('.') + 1:]
-
+    top, domain = get_top_domain(domain)
     if top in servers:
         query_server = servers[top]
     else:
@@ -80,5 +102,11 @@ def query(domain, raw=False):
     return parse_raw(domain, response)
 
 
-# domain = 'baidu.com'
-# query(domain)
+# domain = 'www.hfut.ca.cn'
+# print(get_top_domain(domain))
+#
+# domain = 'www.baidu.edu.cn'
+# print(get_top_domain(domain))
+#
+# domain = '我爱你.中国'
+# print(get_top_domain(domain))
