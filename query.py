@@ -7,6 +7,8 @@ import json
 import re
 from parser import WhoisEntry
 
+BUFF_SIZE = 4096  # 4 KiB
+
 f = open('servers.json')
 servers = json.loads(f.read())
 f.close()
@@ -17,13 +19,22 @@ def decode_datetime(obj):
         return str(int(obj.timestamp()))
 
 
+def parse_raw(domain, data):
+    return json.dumps(WhoisEntry.load(domain, data), ensure_ascii=False, default=decode_datetime)
+
+
 def query_whois_server(top):
     server = "whois.iana.org"
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(30)
         s.connect((server, 43))
         s.sendall(bytes(top + '\r\n', 'utf-8'))
-        data = s.recv(16 * 1024)
+        data = b''
+        while True:
+            part = s.recv(BUFF_SIZE)
+            data += part
+            if len(part) < BUFF_SIZE:
+                break
     response = str(data, 'utf8')
     matcher = re.search('whois:\s*(.+)', response)
     if matcher:
@@ -55,14 +66,18 @@ def query(domain, raw=False):
         s.settimeout(30)
         s.connect((query_server, 43))
         s.sendall(bytes(domain + '\r\n', 'utf-8'))
-        data = s.recv(16 * 1024)
+        data = b''
+        while True:
+            part = s.recv(BUFF_SIZE)
+            data += part
+            if len(part) < BUFF_SIZE:
+                break
 
     response = str(data, 'utf8')
     print(response)
     if raw:
         return response
-    res = json.dumps(WhoisEntry.load(domain, response), ensure_ascii=False, default=decode_datetime)
-    return res
+    return parse_raw(domain, response)
 
 
 # domain = 'baidu.com'

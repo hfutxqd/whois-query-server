@@ -8,7 +8,7 @@ import json
 PORT = 8000
 
 
-class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+class MyHTTPRequestHandler(http.server.CGIHTTPRequestHandler):
 
     def do_HEAD(self):
         self.send_response(200)
