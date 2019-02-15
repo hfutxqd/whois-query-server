@@ -7,7 +7,7 @@ import json
 import re
 from parser import WhoisEntry
 
-BUFF_SIZE = 4096  # 4 KiB
+BUFF_SIZE = 64 * 1024  # 64 KiB
 
 f = open('servers.json')
 servers = json.loads(f.read())
@@ -16,7 +16,7 @@ f.close()
 
 def decode_datetime(obj):
     if isinstance(obj, datetime.datetime):
-        return str(int(obj.timestamp()))
+        return int(obj.timestamp())
 
 
 def parse_raw(domain, data):
@@ -69,15 +69,15 @@ def query_whois_server(top):
     pass
 
 
-def query(domain, raw=False):
+def query(domain, raw=False, recursive=True, query_server=None):
     top, domain = get_top_domain(domain)
-    print(top)
-    if top in servers:
-        query_server = servers[top]
-    else:
-        query_server = query_whois_server(domain)
-        if query_server:
-            servers[top] = query_server
+    if query_server is None:
+        if top in servers:
+            query_server = servers[top]
+        else:
+            query_server = query_whois_server(domain)
+            if query_server:
+                servers[top] = query_server
 
     if query_server is None:
         print('*.{} is not supported!'.format(top))
@@ -98,10 +98,32 @@ def query(domain, raw=False):
                 break
 
     response = str(data, 'utf8')
-    print(response)
+    # print(response)
+    whois_entry = WhoisEntry.load(domain, response)
+    whois_entry['query_from'] = query_server
+
     if raw:
-        return response
-    return parse_raw(domain, response)
+        result = response
+    else:
+        result = json.dumps(whois_entry, ensure_ascii=False, default=decode_datetime)
+
+    if not recursive:
+        return result
+
+    if 'whois_server' in whois_entry and recursive and whois_entry['whois_server'] != query_server:
+        tmp = query(domain, True, False, whois_entry['whois_server'])
+        whois_tmp = WhoisEntry.load(domain, tmp)
+        whois_tmp['query_from'] = whois_entry['whois_server']
+        if whois_tmp.get('domain_name', None) is None:
+            print('parse whois data error.')
+            return result
+        else:
+            if raw:
+                return response
+            else:
+                return json.dumps(whois_tmp, ensure_ascii=False, default=decode_datetime)
+    else:
+        return result
 
 
 # domain = 'www.hfut.ca.cn'
