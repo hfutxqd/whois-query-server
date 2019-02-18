@@ -110,7 +110,7 @@ def query(domain, raw=False, recursive=True, query_server=None):
     if not recursive:
         return result
 
-    if 'whois_server' in whois_entry and recursive and whois_entry['whois_server'] != query_server:
+    if whois_entry.get('whois_server', None) is not None and recursive and whois_entry['whois_server'] != query_server:
         tmp = query(domain, True, False, whois_entry['whois_server'])
         whois_tmp = WhoisEntry.load(domain, tmp)
         whois_tmp['query_from'] = whois_entry['whois_server']
