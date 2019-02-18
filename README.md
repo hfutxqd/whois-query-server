@@ -2,7 +2,7 @@
 A whois query http server base on python3.7. It supports almost all domain.
 
 Run server in system    
-`python3.7 -m pip install -r requirements.txt`
+`python3.7 -m pip install -r requirements.txt`     
 `python3.7 server.py`    
 
 Run server in docker    
