@@ -47,19 +47,26 @@ def get_top_domain(domain):
     return top, domain
 
 
-def query_whois_server(top):
-    server = "whois.iana.org"
+def send_resquest(server, port, data):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(30)
-        s.connect((server, 43))
-        s.sendall(bytes(top + '\r\n', 'utf-8'))
+        s.connect((server, port))
+        s.sendall(bytes(data, 'utf-8'))
         data = b''
+        try_count = 3
         while True:
             part = s.recv(BUFF_SIZE)
             data += part
             if len(part) < BUFF_SIZE:
-                break
+                try_count -= 1
+                if try_count <= 0:
+                    break
     response = str(data, 'utf8')
+    return response
+
+def query_whois_server(top):
+    server = "whois.iana.org"
+    response = send_resquest(server, 43, top + '\r\n')
     matcher = re.search('whois:\s*(.+)', response)
     if matcher:
         print(matcher.group(1))
@@ -86,18 +93,7 @@ def query(domain, raw=False, recursive=True, query_server=None):
     print('query ' + domain)
     print('querying on ' + query_server + ' ...')
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.settimeout(30)
-        s.connect((query_server, 43))
-        s.sendall(bytes(domain + '\r\n', 'utf-8'))
-        data = b''
-        while True:
-            part = s.recv(BUFF_SIZE)
-            data += part
-            if len(part) < BUFF_SIZE:
-                break
-
-    response = str(data, 'utf8')
+    response = response = send_resquest(query_server, 43, domain + '\r\n')
     # print(response)
     whois_entry = WhoisEntry.load(domain, response)
     whois_entry['query_from'] = query_server

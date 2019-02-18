@@ -290,6 +290,8 @@ class WhoisEntry(dict):
             return WhoisApp(domain, text)
         elif domain.endswith('.money'):
             return WhoisMoney(domain, text)
+        elif domain.endswith('.hk'):
+            return WhoisHk(domain, text)
         else:
             return WhoisEntry(domain, text)
 
@@ -1332,7 +1334,6 @@ class WhoisIl(WhoisEntry):
         'name_servers':    'nserver: *(.+)',
         'emails':          'e-mail: *(.+)',
         'phone':           'phone: *(.+)',
-        'name_servers':    'nserver: *(.+)',
         'registrar':       'registrar name: *(.+)',
         'referral_url':    'registrar info: *(.+)',
     }
@@ -1553,6 +1554,34 @@ class WhoisHr(WhoisEntry):
             WhoisEntry.__init__(self, domain, text, self.regex)
 
 
+class WhoisHk(WhoisEntry):
+    """Whois parser for .hr domains
+    """
+    regex = {
+        'domain_name':                    'Domain Name: *(.+)',
+        'whois_server':                   'Registrar WHOIS Server: *(.+)',
+        'creation_date':                  'Domain Name Commencement Date: *(.+)',
+        'status':                         'Domain Status: *(.+)',
+        'registrant_address':             'Address: *(.+)',
+        'country':                        'Country: *(.+)',
+        'registrant_email':               'Email: *(.+)',  # registrant email
+        'registrant_phone':               'Phone: *(.+)',  # registrant phone
+        'fax':                            'Fax: *(.+)',
+        'expiration_date':                'Expiry Date: *(.+)',
+        'name_servers':                   'Name Servers Information: *\n{2}((\S+\n)+)\n{3}'
+    }
+
+    def __init__(self, domain, text):
+        if 'ERROR: No entries found' in text:
+            raise PywhoisError(text)
+        else:
+            WhoisEntry.__init__(self, domain, text, self.regex)
+            name_servers_text = re.search(self.regex['name_servers'], text)
+            if name_servers_text:
+                self.__setitem__('name_servers', name_servers_text.group(1).strip().split('\n'))
+
+
+            
 class WhoisCn(WhoisEntry):
     """Whois parser for .cn domains
     """
