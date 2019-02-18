@@ -290,7 +290,7 @@ class WhoisEntry(dict):
             return WhoisApp(domain, text)
         elif domain.endswith('.money'):
             return WhoisMoney(domain, text)
-        elif domain.endswith('.hk'):
+        elif domain.endswith('.hk') or domain.endswith('.香港'):
             return WhoisHk(domain, text)
         else:
             return WhoisEntry(domain, text)
@@ -1564,11 +1564,12 @@ class WhoisHk(WhoisEntry):
         'status':                         'Domain Status: *(.+)',
         'registrant_address':             'Address: *(.+)',
         'country':                        'Country: *(.+)',
-        'registrant_email':               'Email: *(.+)',  # registrant email
+        'emails':                         EMAIL_REGEX,  # list of email addresses
+        'registrant_email':               'Email: *({})'.format(EMAIL_REGEX),  # registrant email
         'registrant_phone':               'Phone: *(.+)',  # registrant phone
         'fax':                            'Fax: *(.+)',
         'expiration_date':                'Expiry Date: *(.+)',
-        'name_servers':                   'Name Servers Information: *\n{2}((\S+\n)+)\n{3}'
+        'name_servers':                   'Name Servers Information:\s+((\S+\s*\n)+)\s+'
     }
 
     def __init__(self, domain, text):
@@ -1578,7 +1579,10 @@ class WhoisHk(WhoisEntry):
             WhoisEntry.__init__(self, domain, text, self.regex)
             name_servers_text = re.search(self.regex['name_servers'], text)
             if name_servers_text:
-                self.__setitem__('name_servers', name_servers_text.group(1).strip().split('\n'))
+                name_servers = name_servers_text.group(1).strip().split('\n')
+                for i in range(len(name_servers)):
+                    name_servers[i] = name_servers[i].strip()
+                self.__setitem__('name_servers', name_servers)
 
 
             
