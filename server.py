@@ -46,7 +46,21 @@ class MyHTTPRequestHandler(http.server.CGIHTTPRequestHandler):
                 content_length = int(self.headers['Content-Length'])
                 print('Content-Length: ' + str(content_length))
                 body = self.rfile.read(content_length)
+                # {
+                #     "request_id": "sdfdfdf",
+                #     "domains": []
+                # }
                 domains = json.loads(str(body, 'utf-8'))
+                print(domains)
+                if "domains" not in domains or "request_id" not in domains:
+                    res_body = bytes(json.dumps({'code': '400'}), 'utf-8')
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json; charset=UTF-8')
+                    self.send_header('Content-Length', str(len(res_body)))
+                    self.end_headers()
+                    self.wfile.write(res_body)
+                    return None
+                request_id = domains['request_id']
                 if CALLBACK_POST_URL:
                     res_body = bytes(json.dumps({'code': '200'}), 'utf-8')
                     self.send_response(200)
@@ -55,7 +69,7 @@ class MyHTTPRequestHandler(http.server.CGIHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(res_body)
                 domain_queries = {}
-                for domain in domains:
+                for domain in domains['domains']:
                     print('querying ' + domain)
                     domain_query = json.loads(query.query(domain, raw=False))
                     if 'domain_name' in domain_query:
@@ -66,8 +80,11 @@ class MyHTTPRequestHandler(http.server.CGIHTTPRequestHandler):
 
                 # print(domain_queries)
                 if CALLBACK_POST_URL:
-                    print('callback post data ...')
-                    rsp = requests.post(CALLBACK_POST_URL, json=domain_queries)
+                    print('callback post data ' + request_id)
+                    rsp = requests.post(CALLBACK_POST_URL, json={
+                        "request_id": request_id,
+                        "result": domain_queries
+                    })
                     print(rsp.text)
                     pass
                 else:
