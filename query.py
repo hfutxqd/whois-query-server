@@ -5,7 +5,13 @@ import datetime
 import socket
 import json
 import re
+import redis
+import os
 from parser import WhoisEntry
+
+REDIS_URL = os.getenv('REDIS_URL', None)
+redis_cli = redis.utils.from_url(REDIS_URL) if REDIS_URL else None
+
 
 BUFF_SIZE = 64 * 1024  # 64 KiB
 
@@ -64,6 +70,7 @@ def send_resquest(server, port, data):
     response = str(data, 'utf8')
     return response
 
+
 def query_whois_server(top):
     server = "whois.iana.org"
     response = send_resquest(server, 43, top + '\r\n')
@@ -93,8 +100,14 @@ def query(domain, raw=False, recursive=True, query_server=None):
     print('query ' + domain)
     print('querying on ' + query_server + ' ...')
 
-    response = response = send_resquest(query_server, 43, domain + '\r\n')
-    # print(response)
+    response = None
+    if redis_cli:
+        response = redis_cli.get(domain)
+        if response:
+            response = str(response, 'utf-8')
+    if response is None:
+        response = send_resquest(query_server, 43, domain + '\r\n')
+        redis_cli.set(domain, bytes(response, 'utf-8'))
     whois_entry = WhoisEntry.load(domain, response)
     whois_entry['query_from'] = query_server
 

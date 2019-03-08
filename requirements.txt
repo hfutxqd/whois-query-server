@@ -1,2 +1,3 @@
+redis==2.10.6
 future==0.17.1
 requests==2.20.1
