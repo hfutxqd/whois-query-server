@@ -107,7 +107,8 @@ def query(domain, raw=False, recursive=True, query_server=None):
             response = str(response, 'utf-8')
     if response is None:
         response = send_resquest(query_server, 43, domain + '\r\n')
-        redis_cli.set(domain, bytes(response, 'utf-8'))
+        if redis_cli:
+            redis_cli.set(domain, bytes(response, 'utf-8'))
     whois_entry = WhoisEntry.load(domain, response)
     whois_entry['query_from'] = query_server
 
