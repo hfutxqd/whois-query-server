@@ -9,7 +9,7 @@ import redis
 import os
 from parser import WhoisEntry
 
-REDIS_URL = os.getenv('REDIS_URL', None)
+REDIS_URL = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379')
 redis_cli = redis.utils.from_url(REDIS_URL) if REDIS_URL else None
 
 
